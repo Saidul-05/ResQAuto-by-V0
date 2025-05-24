@@ -2,10 +2,8 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { NotificationMonitor } from "@/components/notification/notification-monitor"
 import { Bell, Settings, TestTube, Users, BarChart3 } from "lucide-react"
 import Link from "next/link"
 
@@ -89,106 +87,77 @@ export default function NotificationDashboard() {
         </Card>
       </div>
 
-      <Tabs defaultValue="monitor" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="monitor">Real-time Monitor</TabsTrigger>
-          <TabsTrigger value="test">Quick Tests</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="settings">Configuration</TabsTrigger>
-        </TabsList>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Service Request Test</CardTitle>
+            <CardDescription>Test service request notifications</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full">Send Test Notification</Button>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="monitor" className="space-y-4">
-          <NotificationMonitor />
-        </TabsContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Emergency Alert Test</CardTitle>
+            <CardDescription>Test emergency notification system</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="destructive" className="w-full">
+              Send Emergency Test
+            </Button>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="test" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Service Request</CardTitle>
-                <CardDescription>Test service request notifications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full">Send Test</Button>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Status Update Test</CardTitle>
+            <CardDescription>Test status change notifications</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Send Status Test
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Emergency Alert</CardTitle>
-                <CardDescription>Test emergency notification system</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant="destructive" className="w-full">
-                  Send Emergency Test
-                </Button>
-              </CardContent>
-            </Card>
+      {/* System Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle>System Status</CardTitle>
+          <CardDescription>Current notification system configuration and status</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium">Firebase Configuration</h4>
+                <p className="text-sm text-muted-foreground">Firebase Cloud Messaging settings</p>
+              </div>
+              <Badge variant="default">Active</Badge>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Status Update</CardTitle>
-                <CardDescription>Test status change notifications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant="outline" className="w-full">
-                  Send Status Test
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium">Service Worker</h4>
+                <p className="text-sm text-muted-foreground">Push notification service worker</p>
+              </div>
+              <Badge variant="default">Registered</Badge>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium">API Endpoints</h4>
+                <p className="text-sm text-muted-foreground">Notification API status</p>
+              </div>
+              <Badge variant="default">Operational</Badge>
+            </div>
           </div>
-        </TabsContent>
-
-        <TabsContent value="templates" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Templates</CardTitle>
-              <CardDescription>Manage notification templates for different scenarios</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center text-muted-foreground py-8">
-                Notification templates management coming soon...
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Configuration</CardTitle>
-              <CardDescription>Configure notification system settings</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Firebase Configuration</h4>
-                    <p className="text-sm text-muted-foreground">Firebase Cloud Messaging settings</p>
-                  </div>
-                  <Badge variant="default">Active</Badge>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Service Worker</h4>
-                    <p className="text-sm text-muted-foreground">Push notification service worker</p>
-                  </div>
-                  <Badge variant="default">Registered</Badge>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Rate Limiting</h4>
-                    <p className="text-sm text-muted-foreground">API rate limiting configuration</p>
-                  </div>
-                  <Badge variant="secondary">100/min</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   )
 }

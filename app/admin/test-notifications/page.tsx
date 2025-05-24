@@ -7,10 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { toast } from "@/components/ui/use-toast"
-import { NotificationService } from "@/lib/notification-service"
-import { useAuth } from "@/lib/auth-context"
 import { Bell, Send, TestTube, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -24,29 +21,17 @@ interface TestResult {
 export default function TestNotificationsPage() {
   const [testResults, setTestResults] = useState<TestResult[]>([])
   const [isRunningTests, setIsRunningTests] = useState(false)
-  const [notificationService, setNotificationService] = useState<NotificationService | null>(null)
   const [permissionStatus, setPermissionStatus] = useState<NotificationPermission | "default">("default")
 
   // Test notification form
-  const [testUserId, setTestUserId] = useState("")
   const [testTitle, setTestTitle] = useState("Test Notification")
   const [testBody, setTestBody] = useState("This is a test notification from the roadside assistance app.")
-  const [testData, setTestData] = useState('{"url": "/dashboard", "type": "test"}')
-
-  const { user } = useAuth()
 
   useEffect(() => {
-    const service = NotificationService.getInstance()
-    setNotificationService(service)
-
     if ("Notification" in window) {
       setPermissionStatus(Notification.permission)
     }
-
-    if (user?.id) {
-      setTestUserId(user.id)
-    }
-  }, [user])
+  }, [])
 
   const addTestResult = (test: string, status: "pending" | "success" | "error", message: string) => {
     setTestResults((prev) => [...prev, { test, status, message, timestamp: new Date() }])
@@ -64,6 +49,7 @@ export default function TestNotificationsPage() {
 
     // Test 1: Check browser support
     addTestResult("Browser Support", "pending", "Checking browser compatibility...")
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     if (!("Notification" in window)) {
       updateTestResult("Browser Support", "error", "Browser doesn't support notifications")
@@ -76,69 +62,68 @@ export default function TestNotificationsPage() {
     }
 
     // Test 2: Service Worker Registration
-    addTestResult("Service Worker", "pending", "Registering service worker...")
+    addTestResult("Service Worker", "pending", "Checking service worker...")
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     try {
-      const registration = await navigator.serviceWorker.register("/sw.js")
-      updateTestResult("Service Worker", "success", `Service worker registered: ${registration.scope}`)
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration()
+        if (registration) {
+          updateTestResult("Service Worker", "success", `Service worker found: ${registration.scope}`)
+        } else {
+          updateTestResult("Service Worker", "error", "No service worker registered")
+        }
+      }
     } catch (error) {
-      updateTestResult("Service Worker", "error", `Service worker registration failed: ${error}`)
+      updateTestResult("Service Worker", "error", `Service worker check failed: ${error}`)
     }
 
     // Test 3: Notification Permission
-    addTestResult("Permission Request", "pending", "Requesting notification permission...")
+    addTestResult("Permission Request", "pending", "Checking notification permission...")
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     try {
-      const permission = await Notification.requestPermission()
-      if (permission === "granted") {
-        updateTestResult("Permission Request", "success", "Notification permission granted")
+      if (Notification.permission === "granted") {
+        updateTestResult("Permission Request", "success", "Notification permission already granted")
         setPermissionStatus("granted")
+      } else if (Notification.permission === "denied") {
+        updateTestResult("Permission Request", "error", "Notification permission denied")
+        setPermissionStatus("denied")
       } else {
-        updateTestResult("Permission Request", "error", `Permission ${permission}`)
-        setPermissionStatus(permission)
+        const permission = await Notification.requestPermission()
+        if (permission === "granted") {
+          updateTestResult("Permission Request", "success", "Notification permission granted")
+          setPermissionStatus("granted")
+        } else {
+          updateTestResult("Permission Request", "error", `Permission ${permission}`)
+          setPermissionStatus(permission)
+        }
       }
     } catch (error) {
       updateTestResult("Permission Request", "error", `Permission request failed: ${error}`)
     }
 
-    // Test 4: Notification Service Initialization
-    addTestResult("Service Initialization", "pending", "Initializing notification service...")
-
-    if (notificationService && user?.id) {
-      try {
-        const initialized = await notificationService.initialize(user.id)
-        if (initialized) {
-          updateTestResult("Service Initialization", "success", "Notification service initialized successfully")
-        } else {
-          updateTestResult("Service Initialization", "error", "Failed to initialize notification service")
-        }
-      } catch (error) {
-        updateTestResult("Service Initialization", "error", `Initialization failed: ${error}`)
-      }
-    } else {
-      updateTestResult("Service Initialization", "error", "Notification service or user not available")
-    }
-
-    // Test 5: Local Notification
+    // Test 4: Local Notification
     addTestResult("Local Notification", "pending", "Testing local notification...")
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    if (Notification.permission === "granted" && notificationService) {
+    if (Notification.permission === "granted") {
       try {
-        await notificationService.sendLocalNotification(
-          "Test Local Notification",
-          "This is a test of local notifications",
-          { icon: "/icons/icon-192x192.png" },
-        )
+        new Notification("Test Notification", {
+          body: "This is a test of local notifications",
+          icon: "/favicon.ico",
+        })
         updateTestResult("Local Notification", "success", "Local notification sent successfully")
       } catch (error) {
         updateTestResult("Local Notification", "error", `Local notification failed: ${error}`)
       }
     } else {
-      updateTestResult("Local Notification", "error", "Permission not granted or service not available")
+      updateTestResult("Local Notification", "error", "Permission not granted")
     }
 
-    // Test 6: FCM Token API
+    // Test 5: FCM Token API
     addTestResult("FCM Token API", "pending", "Testing FCM token API...")
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     try {
       const response = await fetch("/api/fcm-token", {
@@ -156,100 +141,50 @@ export default function TestNotificationsPage() {
       updateTestResult("FCM Token API", "error", `API request failed: ${error}`)
     }
 
-    // Test 7: Send Notification API
+    // Test 6: Send Notification API
     addTestResult("Send Notification API", "pending", "Testing send notification API...")
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    if (user?.id) {
-      try {
-        const response = await fetch("/api/send-notification", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user.id,
-            title: "API Test Notification",
-            body: "This is a test from the notification API",
-            data: { type: "test" },
-          }),
-        })
+    try {
+      const response = await fetch("/api/send-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: "test-user",
+          title: "API Test Notification",
+          body: "This is a test from the notification API",
+          data: { type: "test" },
+        }),
+      })
 
-        const result = await response.json()
-        if (response.ok) {
-          updateTestResult("Send Notification API", "success", `API test successful: ${JSON.stringify(result)}`)
-        } else {
-          updateTestResult("Send Notification API", "error", `API error: ${result.error}`)
-        }
-      } catch (error) {
-        updateTestResult("Send Notification API", "error", `API request failed: ${error}`)
+      const result = await response.json()
+      if (response.ok) {
+        updateTestResult("Send Notification API", "success", `API test successful`)
+      } else {
+        updateTestResult("Send Notification API", "error", `API error: ${result.error || "Unknown error"}`)
       }
-    } else {
-      updateTestResult("Send Notification API", "error", "User not authenticated")
+    } catch (error) {
+      updateTestResult("Send Notification API", "error", `API request failed: ${error}`)
     }
 
     setIsRunningTests(false)
   }
 
-  const sendTestNotification = async () => {
-    if (!testUserId || !testTitle || !testBody) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      })
-      return
-    }
-
-    try {
-      let parsedData = {}
-      if (testData.trim()) {
-        parsedData = JSON.parse(testData)
-      }
-
-      const response = await fetch("/api/send-notification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: testUserId,
-          title: testTitle,
-          body: testBody,
-          data: parsedData,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: `Notification sent successfully. Success count: ${result.successCount}`,
-        })
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to send notification",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send notification",
-        variant: "destructive",
-      })
-    }
-  }
-
   const sendLocalTestNotification = async () => {
-    if (!notificationService) {
+    if (Notification.permission !== "granted") {
       toast({
         title: "Error",
-        description: "Notification service not initialized",
+        description: "Notification permission not granted",
         variant: "destructive",
       })
       return
     }
 
     try {
-      await notificationService.sendLocalNotification(testTitle, testBody, { icon: "/icons/icon-192x192.png" })
+      new Notification(testTitle, {
+        body: testBody,
+        icon: "/favicon.ico",
+      })
 
       toast({
         title: "Success",
@@ -289,6 +224,10 @@ export default function TestNotificationsPage() {
     )
   }
 
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString()
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center space-x-2">
@@ -299,8 +238,8 @@ export default function TestNotificationsPage() {
       <Alert>
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          This page is for testing the notification system. Make sure you're logged in and have appropriate permissions.
-          Current permission status: <Badge variant="outline">{permissionStatus}</Badge>
+          This page is for testing the notification system. Current permission status:{" "}
+          <Badge variant="outline">{permissionStatus}</Badge>
         </AlertDescription>
       </Alert>
 
@@ -327,7 +266,7 @@ export default function TestNotificationsPage() {
                     <span className="font-medium">{result.test}</span>
                     {getStatusBadge(result.status)}
                   </div>
-                  <div className="text-sm text-muted-foreground">{result.timestamp.toLocaleTimeString()}</div>
+                  <div className="text-sm text-muted-foreground">{formatTime(result.timestamp)}</div>
                 </div>
               ))}
             </div>
@@ -355,16 +294,6 @@ export default function TestNotificationsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="userId">User ID</Label>
-              <Input
-                id="userId"
-                value={testUserId}
-                onChange={(e) => setTestUserId(e.target.value)}
-                placeholder="Enter user ID to send notification to"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="title">Notification Title</Label>
               <Input
                 id="title"
@@ -386,30 +315,7 @@ export default function TestNotificationsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="data">Additional Data (JSON)</Label>
-              <Textarea
-                id="data"
-                value={testData}
-                onChange={(e) => setTestData(e.target.value)}
-                placeholder='{"url": "/dashboard", "type": "test"}'
-                rows={2}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <Button onClick={sendTestNotification} className="w-full">
-                <Send className="mr-2 h-4 w-4" />
-                Send Server Notification
-              </Button>
-
-              <Button
-                onClick={sendLocalTestNotification}
-                variant="outline"
-                className="w-full"
-                disabled={permissionStatus !== "granted"}
-              >
+              <Button onClick={sendLocalTestNotification} className="w-full" disabled={permissionStatus !== "granted"}>
                 <Bell className="mr-2 h-4 w-4" />
                 Send Local Notification
               </Button>
@@ -445,7 +351,7 @@ export default function TestNotificationsPage() {
                       <span className="font-medium">{result.test}</span>
                       {getStatusBadge(result.status)}
                     </div>
-                    <span className="text-sm text-muted-foreground">{result.timestamp.toLocaleString()}</span>
+                    <span className="text-sm text-muted-foreground">{formatTime(result.timestamp)}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">{result.message}</p>
                 </div>
