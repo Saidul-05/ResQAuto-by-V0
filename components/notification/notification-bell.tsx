@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { requestNotificationPermission } from "@/lib/firebase/messaging"
+import { NotificationService } from "@/lib/notification-service"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/components/ui/use-toast"
@@ -89,7 +89,9 @@ export function NotificationBell() {
   const requestPermission = async () => {
     if (!user?.id) return
 
-    const granted = await requestNotificationPermission(user.id)
+    const notificationService = NotificationService.getInstance()
+    const granted = await notificationService.initialize(user.id)
+
     setPermissionStatus(granted ? "granted" : "denied")
 
     if (granted) {

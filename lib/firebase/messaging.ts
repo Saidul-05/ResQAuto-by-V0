@@ -33,10 +33,9 @@ export async function requestNotificationPermission(userId: string): Promise<boo
       return false
     }
 
-    // Get FCM token
-    const token = await getToken(messaging, {
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-    })
+    // Get FCM token without VAPID key (will use default)
+    // Note: For production, you should configure this through Firebase Console
+    const token = await getToken(messaging)
 
     if (token) {
       // Save token to localStorage
@@ -47,6 +46,15 @@ export async function requestNotificationPermission(userId: string): Promise<boo
 
       // Set up message handler
       setupMessageHandler()
+
+      // Send token to server for validation
+      await fetch("/api/fcm-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ registrationToken: token }),
+      })
 
       return true
     } else {
@@ -118,7 +126,7 @@ function setupMessageHandler() {
   })
 }
 
-// Send notification to specific user (for testing only - in production this should be done from the server)
+// Send notification to specific user (server-side only)
 export async function sendNotificationToUser(
   userId: string,
   title: string,
@@ -126,26 +134,21 @@ export async function sendNotificationToUser(
   data?: Record<string, string>,
 ): Promise<boolean> {
   try {
-    // Get user tokens
-    const userTokensRef = doc(db, "userTokens", userId)
-    const userTokensSnap = await getDoc(userTokensRef)
-
-    if (!userTokensSnap.exists() || !userTokensSnap.data().tokens?.length) {
-      console.warn("No FCM tokens found for user:", userId)
-      return false
-    }
-
-    // In a real app, you would call a server endpoint here
-    // that uses Firebase Admin SDK to send the notification
-    // For demo purposes, we'll just log it
-    console.log("Would send notification to user", userId, {
-      title,
-      body,
-      tokens: userTokensSnap.data().tokens,
-      data,
+    // This should be called from a server action or API route
+    const response = await fetch("/api/send-notification", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        title,
+        body,
+        data,
+      }),
     })
 
-    return true
+    return response.ok
   } catch (error) {
     console.error("Error sending notification:", error)
     return false
