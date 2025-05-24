@@ -27,6 +27,18 @@ export default function TestNotificationsPage() {
   const [testTitle, setTestTitle] = useState("Test Notification")
   const [testBody, setTestBody] = useState("This is a test notification from the roadside assistance app.")
 
+  // Add these state variables after the existing ones
+  const [notificationType, setNotificationType] = useState<"info" | "success" | "warning" | "error">("info")
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [customIcon, setCustomIcon] = useState("/favicon.ico")
+  const [badgeText, setBadgeText] = useState("")
+  const [notificationTag, setNotificationTag] = useState("")
+  const [requireInteraction, setRequireInteraction] = useState(false)
+  const [silent, setSilent] = useState(false)
+  const [recentNotifications, setRecentNotifications] = useState<
+    Array<{ title: string; body: string; timestamp: Date }>
+  >([])
+
   useEffect(() => {
     if ("Notification" in window) {
       setPermissionStatus(Notification.permission)
@@ -170,6 +182,55 @@ export default function TestNotificationsPage() {
     setIsRunningTests(false)
   }
 
+  const sendServerTestNotification = async () => {
+    try {
+      const response = await fetch("/api/send-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: "test-user-" + Date.now(),
+          title: testTitle,
+          body: testBody,
+          data: {
+            type: notificationType,
+            tag: notificationTag || undefined,
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Server notification sent successfully",
+        })
+
+        addRecentNotification(testTitle, testBody)
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to send server notification",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send server notification",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const addRecentNotification = (title: string, body: string) => {
+    setRecentNotifications((prev) => [
+      { title, body, timestamp: new Date() },
+      ...prev.slice(0, 4), // Keep last 5 notifications
+    ])
+  }
+
   const sendLocalTestNotification = async () => {
     if (Notification.permission !== "granted") {
       toast({
@@ -181,15 +242,27 @@ export default function TestNotificationsPage() {
     }
 
     try {
-      new Notification(testTitle, {
+      const options: NotificationOptions = {
         body: testBody,
-        icon: "/favicon.ico",
-      })
+        icon: customIcon || "/favicon.ico",
+        badge: badgeText || undefined,
+        tag: notificationTag || undefined,
+        requireInteraction,
+        silent,
+        data: {
+          type: notificationType,
+          timestamp: new Date().toISOString(),
+        },
+      }
+
+      new Notification(testTitle, options)
 
       toast({
         title: "Success",
         description: "Local notification sent successfully",
       })
+
+      addRecentNotification(testTitle, testBody)
     } catch (error) {
       toast({
         title: "Error",
@@ -293,6 +366,52 @@ export default function TestNotificationsPage() {
             <CardDescription>Send test notifications manually to verify functionality</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Quick Test Buttons */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTestTitle("Service Request Confirmed")
+                  setTestBody(
+                    "Your roadside assistance request has been confirmed. A technician will arrive in 15-20 minutes.",
+                  )
+                }}
+              >
+                Service Request
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTestTitle("Emergency Alert")
+                  setTestBody("Emergency services have been notified of your location. Help is on the way.")
+                }}
+              >
+                Emergency Alert
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTestTitle("Technician Arriving")
+                  setTestBody("Your technician John is 2 minutes away. Vehicle: Blue Ford Transit (ABC-123)")
+                }}
+              >
+                Technician Update
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTestTitle("Service Complete")
+                  setTestBody("Your roadside assistance service has been completed. Please rate your experience.")
+                }}
+              >
+                Service Complete
+              </Button>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="title">Notification Title</Label>
               <Input
@@ -314,10 +433,121 @@ export default function TestNotificationsPage() {
               />
             </div>
 
+            {/* Notification Type Selector */}
+            <div className="space-y-2">
+              <Label>Notification Type</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant={notificationType === "info" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setNotificationType("info")}
+                >
+                  Info
+                </Button>
+                <Button
+                  variant={notificationType === "success" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setNotificationType("success")}
+                >
+                  Success
+                </Button>
+                <Button
+                  variant={notificationType === "warning" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setNotificationType("warning")}
+                >
+                  Warning
+                </Button>
+                <Button
+                  variant={notificationType === "error" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setNotificationType("error")}
+                >
+                  Error
+                </Button>
+              </div>
+            </div>
+
+            {/* Advanced Options */}
+            <div className="space-y-2">
+              <Label>
+                <input
+                  type="checkbox"
+                  checked={showAdvanced}
+                  onChange={(e) => setShowAdvanced(e.target.checked)}
+                  className="mr-2"
+                />
+                Show Advanced Options
+              </Label>
+            </div>
+
+            {showAdvanced && (
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                <div className="space-y-2">
+                  <Label htmlFor="icon">Custom Icon URL</Label>
+                  <Input
+                    id="icon"
+                    value={customIcon}
+                    onChange={(e) => setCustomIcon(e.target.value)}
+                    placeholder="/favicon.ico"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="badge">Badge Text</Label>
+                  <Input
+                    id="badge"
+                    value={badgeText}
+                    onChange={(e) => setBadgeText(e.target.value)}
+                    placeholder="New"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tag">Notification Tag</Label>
+                  <Input
+                    id="tag"
+                    value={notificationTag}
+                    onChange={(e) => setNotificationTag(e.target.value)}
+                    placeholder="service-update"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>
+                    <input
+                      type="checkbox"
+                      checked={requireInteraction}
+                      onChange={(e) => setRequireInteraction(e.target.checked)}
+                      className="mr-2"
+                    />
+                    Require User Interaction
+                  </Label>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>
+                    <input
+                      type="checkbox"
+                      checked={silent}
+                      onChange={(e) => setSilent(e.target.checked)}
+                      className="mr-2"
+                    />
+                    Silent Notification
+                  </Label>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Button onClick={sendLocalTestNotification} className="w-full" disabled={permissionStatus !== "granted"}>
                 <Bell className="mr-2 h-4 w-4" />
                 Send Local Notification
+              </Button>
+
+              <Button onClick={sendServerTestNotification} variant="outline" className="w-full">
+                <Send className="mr-2 h-4 w-4" />
+                Send Server Notification
               </Button>
             </div>
 
@@ -329,6 +559,22 @@ export default function TestNotificationsPage() {
                   permission.
                 </AlertDescription>
               </Alert>
+            )}
+
+            {/* Recent Notifications */}
+            {recentNotifications.length > 0 && (
+              <div className="space-y-2">
+                <Label>Recent Test Notifications</Label>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {recentNotifications.map((notification, index) => (
+                    <div key={index} className="text-sm p-2 border rounded bg-muted/30">
+                      <div className="font-medium">{notification.title}</div>
+                      <div className="text-muted-foreground">{notification.body}</div>
+                      <div className="text-xs text-muted-foreground">{formatTime(notification.timestamp)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
