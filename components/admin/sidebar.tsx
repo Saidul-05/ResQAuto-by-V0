@@ -1,67 +1,79 @@
-import { Bell, LayoutDashboard, ListChecks, type LucideIcon, Settings, ShoppingCart, AlertTriangle } from "lucide-react"
+import { BarChart3, Car, LayoutDashboard, Settings, ShoppingCart, User2 } from "lucide-react"
 
-interface NavItem {
-  title: string
-  href: string
-  icon: LucideIcon
-  badge?: string
+import type { MainNavItem, SidebarNavItem } from "@/types"
+
+interface DashboardConfig {
+  mainNav: MainNavItem[]
+  sidebarNav: SidebarNavItem[]
 }
 
-interface NavSection {
-  title: string
-  items: NavItem[]
+export const dashboardConfig: DashboardConfig = {
+  mainNav: [
+    {
+      title: "Dashboard",
+      href: "/admin",
+    },
+    {
+      title: "Users",
+      href: "/admin/users",
+    },
+  ],
+  sidebarNav: [
+    {
+      title: "General",
+      items: [
+        {
+          title: "Dashboard",
+          href: "/admin",
+          icon: LayoutDashboard,
+          description: "Overview of your dashboard.",
+        },
+        {
+          title: "Users",
+          href: "/admin/users",
+          icon: User2,
+          description: "Manage users.",
+        },
+      ],
+    },
+    {
+      title: "Store",
+      items: [
+        {
+          title: "Products",
+          href: "/admin/products",
+          icon: ShoppingCart,
+          description: "Manage products.",
+        },
+        {
+          title: "Analytics",
+          href: "/admin/analytics",
+          icon: BarChart3,
+          description: "View store analytics.",
+        },
+      ],
+    },
+    {
+      title: "Settings",
+      items: [
+        {
+          title: "Settings",
+          href: "/admin/settings",
+          icon: Settings,
+          description: "Manage settings.",
+        },
+      ],
+    },
+    {
+      title: "Testing",
+      items: [
+        {
+          title: "Accident Flow Test",
+          href: "/admin/accident-flow-test",
+          icon: Car,
+          description: "Test complete accident detection flow",
+        },
+      ],
+    },
+  ],
 }
-
-export const sidebarConfig: NavSection[] = [
-  {
-    title: "General",
-    items: [
-      {
-        title: "Dashboard",
-        href: "/admin",
-        icon: LayoutDashboard,
-      },
-    ],
-  },
-  {
-    title: "Management",
-    items: [
-      {
-        title: "Products",
-        href: "/admin/products",
-        icon: ShoppingCart,
-      },
-      {
-        title: "Orders",
-        href: "/admin/orders",
-        icon: ListChecks,
-      },
-    ],
-  },
-  {
-    title: "Notifications",
-    items: [
-      {
-        title: "Notifications",
-        href: "/admin/notifications",
-        icon: Bell,
-      },
-      {
-        title: "Emergency Testing",
-        href: "/admin/emergency-testing",
-        icon: AlertTriangle,
-        badge: "Test",
-      },
-    ],
-  },
-  {
-    title: "Settings",
-    items: [
-      {
-        title: "Settings",
-        href: "/admin/settings",
-        icon: Settings,
-      },
-    ],
-  },
-]
