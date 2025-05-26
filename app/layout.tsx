@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { OfflineBanner } from "@/components/offline-banner"
 import SwRegister from "./sw-register"
 import { MobileNavBar } from "@/components/mobile-nav-bar"
+import { AuthProvider } from "@/lib/auth-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -29,13 +30,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <OfflineBanner />
-          <Navbar />
-          {children}
-          <Footer />
-          <MobileNavBar />
-          <Toaster />
-          <SwRegister />
+          <AuthProvider>
+            <OfflineBanner />
+            <Navbar />
+            {children}
+            <Footer />
+            <MobileNavBar />
+            <Toaster />
+            <SwRegister />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea"
 
 export default function VerificationPage() {
   const router = useRouter()
-  const { user, updateUser } = useAuth()
+  const [mounted, setMounted] = useState(false)
+  const authContext = useAuth()
+  const { user, updateUser } = authContext
   const [activeTab, setActiveTab] = useState("documents")
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -39,6 +40,11 @@ export default function VerificationPage() {
     certification: null as File | null,
     businessLicense: null as File | null,
   })
+
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -63,7 +69,9 @@ export default function VerificationPage() {
       console.log("Files:", files)
 
       // Update user verification status
-      await updateUser({ verified: true })
+      if (updateUser) {
+        await updateUser({ verified: true })
+      }
 
       setSuccess(true)
 
@@ -73,6 +81,8 @@ export default function VerificationPage() {
           router.push("/mechanic")
         } else if (user?.role === "provider") {
           router.push("/provider")
+        } else {
+          router.push("/dashboard")
         }
       }, 3000)
     } catch (err) {
@@ -83,6 +93,24 @@ export default function VerificationPage() {
     }
   }
 
+  // Show loading state during SSR/initial mount
+  if (!mounted) {
+    return (
+      <div className="container flex items-center justify-center min-h-screen py-12">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Loading...</CardTitle>
+            <CardDescription>Please wait while we load your verification page.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Handle case where user is not authenticated or doesn't have required role
   if (!user || (user.role !== "mechanic" && user.role !== "provider")) {
     return (
       <div className="container flex items-center justify-center min-h-screen py-12">
@@ -99,6 +127,7 @@ export default function VerificationPage() {
     )
   }
 
+  // Handle case where user is already verified
   if (user.verified) {
     return (
       <div className="container flex items-center justify-center min-h-screen py-12">
