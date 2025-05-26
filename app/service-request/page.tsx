@@ -44,23 +44,11 @@ export default function ServiceRequestPage() {
   })
 
   // Get user's location on page load
+  // Don't automatically request location on page load to avoid permission prompts
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          })
-        },
-        (error) => {
-          console.error("Error getting location:", error)
-          // Don't show an error toast here, as the LocationTracker component will handle this
-          // Just set userLocation to null and let the LocationTracker component handle it
-          setUserLocation(null)
-        },
-      )
-    }
+    // Set a default location instead of immediately requesting geolocation
+    const defaultLocation = { lat: 40.7128, lng: -74.006 } // New York City
+    setUserLocation(defaultLocation)
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -79,7 +67,10 @@ export default function ServiceRequestPage() {
   const handleNext = () => {
     // Validate current tab
     if (activeTab === "location") {
-      // Don't block progress if location is missing - the LocationTracker will handle this
+      if (!userLocation) {
+        setError("Please set your location before continuing. You can use automatic detection or enter it manually.")
+        return
+      }
       setActiveTab("service")
       return
     }
@@ -116,10 +107,11 @@ export default function ServiceRequestPage() {
     try {
       // Validate required fields
       if (!userLocation) {
-        throw new Error("Location is required. Please provide your location manually or enable location services.")
+        throw new Error("Location is required. Please provide your location using the location tab.")
       }
 
       if (!formData.serviceType) {
+        setActiveTab("service")
         throw new Error("Service type is required")
       }
 

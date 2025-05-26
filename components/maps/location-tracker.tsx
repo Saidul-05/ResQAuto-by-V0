@@ -46,78 +46,29 @@ export function LocationTracker({ serviceId, initialLocation, onLocationUpdate }
   // Try to get user's location on component mount if no initial location is provided
   useEffect(() => {
     if (!initialLocation) {
-      getCurrentLocation()
+      // Don't automatically request location on mount to avoid immediate permission prompts
+      // Let the user click the button to request location
+      const defaultLocation = { lat: 40.7128, lng: -74.006 } // New York City as fallback
+      setLocation(defaultLocation)
+      if (onLocationUpdate) {
+        onLocationUpdate(defaultLocation)
+      }
     }
-  }, [initialLocation])
+  }, [initialLocation, onLocationUpdate])
 
   const getCurrentLocation = () => {
     setIsLoading(true)
     setError(null)
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const newLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          }
-          setLocation(newLocation)
-
-          if (onLocationUpdate) {
-            onLocationUpdate(newLocation)
-          }
-
-          setIsLoading(false)
-          setPermissionDenied(false)
-        },
-        (error) => {
-          console.error("Error getting location:", error)
-          setIsLoading(false)
-
-          let errorMessage = "Unable to get your location."
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage =
-                "Location permission denied. Please enable location services or enter your location manually."
-              setPermissionDenied(true)
-              setActiveTab("manual")
-              break
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = "Location information is unavailable."
-              break
-            case error.TIMEOUT:
-              errorMessage = "The request to get your location timed out."
-              break
-          }
-
-          setError(errorMessage)
-          toast({
-            title: "Location error",
-            description: errorMessage,
-            variant: "destructive",
-          })
-
-          // Set a default location if we couldn't get the user's location
-          if (!location) {
-            const defaultLocation = { lat: 40.7128, lng: -74.006 } // New York City
-            setLocation(defaultLocation)
-            if (onLocationUpdate) {
-              onLocationUpdate(defaultLocation)
-            }
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        },
-      )
-    } else {
+    if (!navigator.geolocation) {
       setIsLoading(false)
       setError("Geolocation is not supported by your browser.")
+      setPermissionDenied(true)
+      setActiveTab("manual")
+
       toast({
         title: "Geolocation not supported",
-        description: "Your browser does not support geolocation.",
+        description: "Please enter your location manually below.",
         variant: "destructive",
       })
 
@@ -129,7 +80,82 @@ export function LocationTracker({ serviceId, initialLocation, onLocationUpdate }
           onLocationUpdate(defaultLocation)
         }
       }
+      return
     }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        }
+        setLocation(newLocation)
+
+        if (onLocationUpdate) {
+          onLocationUpdate(newLocation)
+        }
+
+        setIsLoading(false)
+        setPermissionDenied(false)
+        setError(null)
+
+        toast({
+          title: "Location found",
+          description: "Your location has been detected successfully.",
+        })
+      },
+      (error) => {
+        console.warn("Geolocation error:", error.message)
+        setIsLoading(false)
+
+        let errorMessage = "Unable to get your location."
+        let shouldSwitchToManual = false
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access was denied. Please enter your location manually below."
+            setPermissionDenied(true)
+            shouldSwitchToManual = true
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information is unavailable. Please try entering your location manually."
+            shouldSwitchToManual = true
+            break
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out. Please try again or enter your location manually."
+            break
+          default:
+            errorMessage = "An error occurred while getting your location. Please try entering it manually."
+            shouldSwitchToManual = true
+        }
+
+        setError(errorMessage)
+
+        if (shouldSwitchToManual) {
+          setActiveTab("manual")
+        }
+
+        toast({
+          title: "Location Error",
+          description: errorMessage,
+          variant: "destructive",
+        })
+
+        // Set a default location as fallback
+        if (!location) {
+          const defaultLocation = { lat: 40.7128, lng: -74.006 } // New York City
+          setLocation(defaultLocation)
+          if (onLocationUpdate) {
+            onLocationUpdate(defaultLocation)
+          }
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000, // Increased timeout
+        maximumAge: 300000, // 5 minutes cache
+      },
+    )
   }
 
   const handleManualLocationSubmit = () => {
@@ -183,7 +209,11 @@ export function LocationTracker({ serviceId, initialLocation, onLocationUpdate }
           <MapPin className="mr-2 h-5 w-5" />
           Your Location
         </CardTitle>
-        <CardDescription>We need your location to provide roadside assistance</CardDescription>
+        <CardDescription>
+          {permissionDenied
+            ? "Location access was denied. Please enter your location manually or enable location services in your browser."
+            : "We need your location to provide roadside assistance. You can use automatic detection or enter it manually."}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {error && (
@@ -214,6 +244,17 @@ export function LocationTracker({ serviceId, initialLocation, onLocationUpdate }
 
           <TabsContent value="manual">
             <div className="space-y-4">
+              {permissionDenied && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                  <h4 className="font-medium text-blue-900 mb-2">How to enable location access:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Click the location icon in your browser's address bar</li>
+                    <li>• Select "Allow" for location access</li>
+                    <li>• Refresh the page and try again</li>
+                  </ul>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="latitude">Latitude</Label>
                 <Input
@@ -242,14 +283,11 @@ export function LocationTracker({ serviceId, initialLocation, onLocationUpdate }
               </Button>
 
               <div className="text-sm text-muted-foreground mt-2">
-                <p>Not sure about your coordinates?</p>
-                <ul className="list-disc pl-5 mt-1">
+                <p className="font-medium mb-1">Need help finding your coordinates?</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Open Google Maps, right-click your location, and select "What's here?"</li>
                   <li>
-                    You can find your coordinates on Google Maps by right-clicking on your location and selecting
-                    "What's here?"
-                  </li>
-                  <li>
-                    Or use a website like{" "}
+                    Use a website like{" "}
                     <a
                       href="https://www.latlong.net/"
                       target="_blank"
@@ -257,6 +295,17 @@ export function LocationTracker({ serviceId, initialLocation, onLocationUpdate }
                       className="text-primary hover:underline"
                     >
                       latlong.net
+                    </a>
+                  </li>
+                  <li>
+                    Search for your address on{" "}
+                    <a
+                      href="https://www.gps-coordinates.net/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      gps-coordinates.net
                     </a>
                   </li>
                 </ul>
