@@ -8,6 +8,7 @@ import {
   Settings,
   User2,
   UserCheck,
+  Layers,
 } from "lucide-react"
 
 interface NavItem {
@@ -59,6 +60,11 @@ const sidebarConfig: NavSection[] = [
         title: "Biometric Testing",
         href: "/admin/biometric-test",
         icon: Fingerprint,
+      },
+      {
+        title: "Multi-Modal Testing",
+        href: "/admin/multi-modal-test",
+        icon: Layers,
       },
       {
         title: "Checklist Test",
