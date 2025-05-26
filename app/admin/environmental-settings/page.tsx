@@ -97,13 +97,43 @@ export default function EnvironmentalSettingsPage() {
   const [settings, setSettings] = useState<EnvironmentalSettings>({
     weather: {
       clear: { enabled: true, impactMultiplier: 1.0, stressMultiplier: 1.0, timeMultiplier: 1.0, transferPenalty: 0.0 },
-      cloudy: { enabled: true, impactMultiplier: 1.1, stressMultiplier: 1.05, timeMultiplier: 1.1, transferPenalty: 0.05 },
+      cloudy: {
+        enabled: true,
+        impactMultiplier: 1.1,
+        stressMultiplier: 1.05,
+        timeMultiplier: 1.1,
+        transferPenalty: 0.05,
+      },
       rain: { enabled: true, impactMultiplier: 1.2, stressMultiplier: 1.1, timeMultiplier: 1.2, transferPenalty: 0.1 },
       snow: { enabled: true, impactMultiplier: 1.3, stressMultiplier: 1.2, timeMultiplier: 1.4, transferPenalty: 0.15 },
-      fog: { enabled: true, impactMultiplier: 1.25, stressMultiplier: 1.15, timeMultiplier: 1.3, transferPenalty: 0.12 },
-      storm: { enabled: true, impactMultiplier: 1.5, stressMultiplier: 1.5, timeMultiplier: 1.8, transferPenalty: 0.25 },
-      extreme_heat: { enabled: true, impactMultiplier: 1.3, stressMultiplier: 1.3, timeMultiplier: 1.2, transferPenalty: 0.18 },
-      extreme_cold: { enabled: true, impactMultiplier: 1.4, stressMultiplier: 1.4, timeMultiplier: 1.5, transferPenalty: 0.22 },
+      fog: {
+        enabled: true,
+        impactMultiplier: 1.25,
+        stressMultiplier: 1.15,
+        timeMultiplier: 1.3,
+        transferPenalty: 0.12,
+      },
+      storm: {
+        enabled: true,
+        impactMultiplier: 1.5,
+        stressMultiplier: 1.5,
+        timeMultiplier: 1.8,
+        transferPenalty: 0.25,
+      },
+      extreme_heat: {
+        enabled: true,
+        impactMultiplier: 1.3,
+        stressMultiplier: 1.3,
+        timeMultiplier: 1.2,
+        transferPenalty: 0.18,
+      },
+      extreme_cold: {
+        enabled: true,
+        impactMultiplier: 1.4,
+        stressMultiplier: 1.4,
+        timeMultiplier: 1.5,
+        transferPenalty: 0.22,
+      },
     },
     coverage: {
       enabled: true,
@@ -131,7 +161,7 @@ export default function EnvironmentalSettingsPage() {
   const [hasChanges, setHasChanges] = useState(false)
 
   const updateWeatherSetting = (weather: string, field: keyof WeatherFactorSettings, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       weather: {
         ...prev.weather,
@@ -145,7 +175,7 @@ export default function EnvironmentalSettingsPage() {
   }
 
   const updateCoverageSetting = (field: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       coverage: {
         ...prev.coverage,
@@ -156,7 +186,7 @@ export default function EnvironmentalSettingsPage() {
   }
 
   const updateLocationSetting = (field: keyof LocationFactorSettings, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       location: {
         ...prev.location,
@@ -167,7 +197,7 @@ export default function EnvironmentalSettingsPage() {
   }
 
   const updateTimeSetting = (field: keyof TimeFactorSettings, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       time: {
         ...prev.time,
@@ -178,7 +208,7 @@ export default function EnvironmentalSettingsPage() {
   }
 
   const updateGlobalSetting = (field: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       globalSettings: {
         ...prev.globalSettings,
@@ -190,7 +220,7 @@ export default function EnvironmentalSettingsPage() {
 
   const saveSettings = () => {
     // In a real implementation, this would save to a backend
-    localStorage.setItem('environmentalSettings', JSON.stringify(settings))
+    localStorage.setItem("environmentalSettings", JSON.stringify(settings))
     setHasChanges(false)
     toast({
       title: "✅ Settings Saved",
@@ -268,7 +298,7 @@ export default function EnvironmentalSettingsPage() {
                   </div>
                   <Switch
                     checked={settings.globalSettings.enableEnvironmentalFactors}
-                    onCheckedChange={(checked) => updateGlobalSetting('enableEnvironmentalFactors', checked)}
+                    onCheckedChange={(checked) => updateGlobalSetting("enableEnvironmentalFactors", checked)}
                   />
                 </div>
 
@@ -277,7 +307,7 @@ export default function EnvironmentalSettingsPage() {
                   <div className="flex items-center space-x-4">
                     <Slider
                       value={[settings.globalSettings.contextSimilarityWeight]}
-                      onValueChange={([value]) => updateGlobalSetting('contextSimilarityWeight', value)}
+                      onValueChange={([value]) => updateGlobalSetting("contextSimilarityWeight", value)}
                       min={0.1}
                       max={1.0}
                       step={0.1}
@@ -298,7 +328,7 @@ export default function EnvironmentalSettingsPage() {
                   <div className="flex items-center space-x-4">
                     <Slider
                       value={[settings.globalSettings.transferDecayRate]}
-                      onValueChange={([value]) => updateGlobalSetting('transferDecayRate', value)}
+                      onValueChange={([value]) => updateGlobalSetting("transferDecayRate", value)}
                       min={0.05}
                       max={0.5}
                       step={0.05}
@@ -323,7 +353,7 @@ export default function EnvironmentalSettingsPage() {
                   </div>
                   <Switch
                     checked={settings.globalSettings.adaptiveLearning}
-                    onCheckedChange={(checked) => updateGlobalSetting('adaptiveLearning', checked)}
+                    onCheckedChange={(checked) => updateGlobalSetting("adaptiveLearning", checked)}
                     disabled={!settings.globalSettings.enableEnvironmentalFactors}
                   />
                 </div>
@@ -336,7 +366,7 @@ export default function EnvironmentalSettingsPage() {
                     <div className="flex justify-between">
                       <span>Weather:</span>
                       <Badge variant={settings.weather.clear.enabled ? "default" : "secondary"}>
-                        {Object.values(settings.weather).filter(w => w.enabled).length}/8
+                        {Object.values(settings.weather).filter((w) => w.enabled).length}/8
                       </Badge>
                     </div>
                     <div className="flex justify-between">
@@ -365,7 +395,7 @@ export default function EnvironmentalSettingsPage() {
                       <div className="flex justify-between">
                         <span>Max Weather Impact:</span>
                         <span className="font-medium">
-                          {Math.max(...Object.values(settings.weather).map(w => w.impactMultiplier)).toFixed(1)}x
+                          {Math.max(...Object.values(settings.weather).map((w) => w.impactMultiplier)).toFixed(1)}x
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -409,9 +439,10 @@ export default function EnvironmentalSettingsPage() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="weather" className="space-y-4">
           <Card>
@@ -436,11 +467,11 @@ export default function EnvironmentalSettingsPage() {
                         {weatherType === "storm" && <Wind className="h-4 w-4 text-purple-500" />}
                         {weatherType === "extreme_heat" && <Thermometer className="h-4 w-4 text-red-500" />}
                         {weatherType === "extreme_cold" && <Snowflake className="h-4 w-4 text-blue-600" />}
-                        <h4 className="font-semibold capitalize">{weatherType.replace('_', ' ')}</h4>
+                        <h4 className="font-semibold capitalize">{weatherType.replace("_", " ")}</h4>
                       </div>
                       <Switch
                         checked={config.enabled}
-                        onCheckedChange={(checked) => updateWeatherSetting(weatherType, 'enabled', checked)}
+                        onCheckedChange={(checked) => updateWeatherSetting(weatherType, "enabled", checked)}
                         disabled={!settings.globalSettings.enableEnvironmentalFactors}
                       />
                     </div>
@@ -452,7 +483,7 @@ export default function EnvironmentalSettingsPage() {
                           <div className="flex items-center space-x-2">
                             <Slider
                               value={[config.impactMultiplier]}
-                              onValueChange={([value]) => updateWeatherSetting(weatherType, 'impactMultiplier', value)}
+                              onValueChange={([value]) => updateWeatherSetting(weatherType, "impactMultiplier", value)}
                               min={1.0}
                               max={2.0}
                               step={0.1}
@@ -467,7 +498,7 @@ export default function EnvironmentalSettingsPage() {
                           <div className="flex items-center space-x-2">
                             <Slider
                               value={[config.stressMultiplier]}
-                              onValueChange={([value]) => updateWeatherSetting(weatherType, 'stressMultiplier', value)}
+                              onValueChange={([value]) => updateWeatherSetting(weatherType, "stressMultiplier", value)}
                               min={1.0}
                               max={2.0}
                               step={0.05}
@@ -482,7 +513,7 @@ export default function EnvironmentalSettingsPage() {
                           <div className="flex items-center space-x-2">
                             <Slider
                               value={[config.timeMultiplier]}
-                              onValueChange={([value]) => updateWeatherSetting(weatherType, 'timeMultiplier', value)}
+                              onValueChange={([value]) => updateWeatherSetting(weatherType, "timeMultiplier", value)}
                               min={1.0}
                               max={3.0}
                               step={0.1}
@@ -497,7 +528,7 @@ export default function EnvironmentalSettingsPage() {
                           <div className="flex items-center space-x-2">
                             <Slider
                               value={[config.transferPenalty]}
-                              onValueChange={([value]) => updateWeatherSetting(weatherType, 'transferPenalty', value)}
+                              onValueChange={([value]) => updateWeatherSetting(weatherType, "transferPenalty", value)}
                               min={0.0}
                               max={0.5}
                               step={0.05}
@@ -528,13 +559,11 @@ export default function EnvironmentalSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label>Enable Coverage Factors</Label>
-                  <div className="text-sm text-muted-foreground">
-                    Factor in network signal strength and quality
-                  </div>
+                  <div className="text-sm text-muted-foreground">Factor in network signal strength and quality</div>
                 </div>
                 <Switch
                   checked={settings.coverage.enabled}
-                  onCheckedChange={(checked) => updateCoverageSetting('enabled', checked)}
+                  onCheckedChange={(checked) => updateCoverageSetting("enabled", checked)}
                   disabled={!settings.globalSettings.enableEnvironmentalFactors}
                 />
               </div>
@@ -550,10 +579,12 @@ export default function EnvironmentalSettingsPage() {
                           <Input
                             type="number"
                             value={threshold}
-                            onChange={(e) => updateCoverageSetting('signalThresholds', {
-                              ...settings.coverage.signalThresholds,
-                              [level]: Number.parseInt(e.target.value)
-                            })}
+                            onChange={(e) =>
+                              updateCoverageSetting("signalThresholds", {
+                                ...settings.coverage.signalThresholds,
+                                [level]: Number.parseInt(e.target.value),
+                              })
+                            }
                             className="text-sm"
                           />
                         </div>
@@ -571,10 +602,12 @@ export default function EnvironmentalSettingsPage() {
                           </div>
                           <Slider
                             value={[multiplier]}
-                            onValueChange={([value]) => updateCoverageSetting('impactMultipliers', {
-                              ...settings.coverage.impactMultipliers,
-                              [level]: value
-                            })}
+                            onValueChange={([value]) =>
+                              updateCoverageSetting("impactMultipliers", {
+                                ...settings.coverage.impactMultipliers,
+                                [level]: value,
+                              })
+                            }
                             min={1.0}
                             max={5.0}
                             step={0.1}
@@ -604,13 +637,11 @@ export default function EnvironmentalSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label>Enable Location Factors</Label>
-                  <div className="text-sm text-muted-foreground">
-                    Factor in geographic region and infrastructure
-                  </div>
+                  <div className="text-sm text-muted-foreground">Factor in geographic region and infrastructure</div>
                 </div>
                 <Switch
                   checked={settings.location.enabled}
-                  onCheckedChange={(checked) => updateLocationSetting('enabled', checked)}
+                  onCheckedChange={(checked) => updateLocationSetting("enabled", checked)}
                   disabled={!settings.globalSettings.enableEnvironmentalFactors}
                 />
               </div>
@@ -627,10 +658,12 @@ export default function EnvironmentalSettingsPage() {
                           </div>
                           <Slider
                             value={[multiplier]}
-                            onValueChange={([value]) => updateLocationSetting('regionMultipliers', {
-                              ...settings.location.regionMultipliers,
-                              [region]: value
-                            })}
+                            onValueChange={([value]) =>
+                              updateLocationSetting("regionMultipliers", {
+                                ...settings.location.regionMultipliers,
+                                [region]: value,
+                              })
+                            }
                             min={1.0}
                             max={2.0}
                             step={0.05}
@@ -648,26 +681,22 @@ export default function EnvironmentalSettingsPage() {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Infrastructure Impact</Label>
-                          <div className="text-sm text-muted-foreground">
-                            Consider local infrastructure quality
-                          </div>
+                          <div className="text-sm text-muted-foreground">Consider local infrastructure quality</div>
                         </div>
                         <Switch
                           checked={settings.location.infrastructureImpact}
-                          onCheckedChange={(checked) => updateLocationSetting('infrastructureImpact', checked)}
+                          onCheckedChange={(checked) => updateLocationSetting("infrastructureImpact", checked)}
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <Label>Emergency Service Distance</Label>
-                          <div className="text-sm text-muted-foreground">
-                            Factor in distance to emergency services
-                          </div>
+                          <div className="text-sm text-muted-foreground">Factor in distance to emergency services</div>
                         </div>
                         <Switch
                           checked={settings.location.emergencyServiceDistance}
-                          onCheckedChange={(checked) => updateLocationSetting('emergencyServiceDistance', checked)}
+                          onCheckedChange={(checked) => updateLocationSetting("emergencyServiceDistance", checked)}
                         />
                       </div>
                     </div>
@@ -683,5 +712,5 @@ export default function EnvironmentalSettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )\
+  )
 }
